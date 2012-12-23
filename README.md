@@ -49,7 +49,7 @@ class StudentManager extends TabularInputManager
         $item->class_id=$model->primaryKey;
     }
 }
-</code></pre>
+```
 
 In this class we implement all methods needed for manage the primary keys of the students, for load the student of a class, for delete students.
 
