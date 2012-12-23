@@ -9,8 +9,7 @@ The interface should present an interface for collect the data of the one, and z
 
 In the hipotesys that we have to insert a ClassRoom with many Students, we will create a StudentManager by extending Tabular input manager
 
-<pre><code>
-<?php
+```
 class StudentManager extends TabularInputManager
 {
 
@@ -56,7 +55,7 @@ In this class we implement all methods needed for manage the primary keys of the
 
 The typical controller code for use this manager is:
 
-<pre><code>
+```
 /**
  * Update a new model.
  * If creation is successful, the browser will be redirected to the 'view' page.
@@ -92,11 +91,11 @@ public function actionCreate()
         'studentManager'=>$studentManager,
     ));
 }
-</pre></code>
+```
 
 In the view you have to create the fields for all the students and the button for add/delete student:
 
-<pre><code>
+```
 // add student:
 
 <?php echo CHtml::link(
@@ -118,12 +117,12 @@ In the view you have to create the fields for all the students and the button fo
                 'Student[id]'=>$id,
                 'noValidate'=>true)
             ));?>
-</pre></code>
+```
 
 For example, in your _form.php:
 
-<pre><code>
-[ ... fields for school ... ]
+```
+/* fields for school */
 
 <h2>Students:</h2>
 <table>
@@ -138,11 +137,11 @@ For example, in your _form.php:
 
 <?php endforeach;?>
 </table>
-</pre></code>
+```
 
 And the _formStudent:
 
-<pre><code>
+```
 <tr>
     <td>
         <?php echo $form->textArea($model,"[$id]name",array('size'=>50,'maxlength'=>255)); ?>
@@ -167,7 +166,7 @@ And the _formStudent:
             ));?>
     </td>
 </tr>
-</pre></code>
+```
 
 The result will be a table of students, with the button for add and delete students
 
