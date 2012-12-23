@@ -1,48 +1,57 @@
 <?php
 /**
- * TabularInputManager is a class of utility for manage tabular input.
+ * TabularInputManager is a utility class to manage tabular input.
  * it supplies all utlity necessary for create, save models in tabular input
  */
 abstract class TabularInputManager extends CComponent
 {
 	/**
-	 * @var array the items on wich to work
+     * The child items which we are working on.
+	 * @var array
 	 */
 	public $_items;
 	
 	/**
-	 * $var string the classname of the items
+     * the class name of the child items
+	 * @var string
 	 */
 	protected $class;
-	
-	protected $_lastNew=0;
+
+    /**
+     * Holds the ID of the last record created
+     * @var int
+     */
+    protected $_lastNew=0;
 	
 	
 	/**
 	 * Main function of the class.
-	 * load the items from db and applys modification
-	 * @param model the model on wich keywords belongs to
+	 * Load the items from db and applies modifications
+	 * @param $data object - The parent model in the relationship
 	 */
 	public function manage($data)
 	{
-		// var for last new record
+		// Variable which will hold the last record created's ID
 		$this->_lastNew=0;
 		$classname=$this->class;
 		$this->_items=array();
-		foreach($data as $i=>$item_post)
-		{	// if is ordred a deletion, we jump to the next one element
+		foreach($data as $i => $item_post)
+		{
+		    // If this child is to be deleted, we jump to the next one.
 			if (($i=='command')||($i=='id'))
 				continue;
+
 			if (isset($data['command'])&&isset($data["id"]))
 				if (($data['command']=="delete")&&($data["id"]==$i))
 					continue;
 			
-            // if the code is like 'nxxx' is a new record
+            // if the code is like 'nxxx', it is a new record
             if (substr($i, 0, 1)=='n')
             {
-                // create of new record
+                // Create a new record
                 $item=new $classname();
-                // rember of the last one code
+
+                // Remember the last object's id
                 $this->_lastNew=substr($i, 1);
             }
             else // load from db
@@ -64,7 +73,9 @@ abstract class TabularInputManager extends CComponent
 			$this->_items[$i]=$item;
 			if(isset($data[$i]))
 				$item->attributes=$data[$i];
-		} // add of new keyword
+		}
+
+		// Adding a new child
 		if (isset($data['command']))
 			if ($data['command']=="add")
 			{
@@ -80,7 +91,7 @@ abstract class TabularInputManager extends CComponent
 	}
 	
 	/**
-	 * retrive the items
+	 * Retrieve the list of the child items
 	 * @return array the items loaded
 	 */
 	public function getItems()
@@ -93,58 +104,60 @@ abstract class TabularInputManager extends CComponent
 
 	/**
 	 * Validates items
-	 * @return boolean whether the validation is successfully
+	 * @return boolean whether validation was successful
 	 */
 	public function validate()
 	{
 		$valid=true;
+        /** @var $model CActiveRecord */
 		foreach ($this->_items as $i=>$model)
-		 //we want to validate all tags, even if there are errors
+		    //we want to validate all tags, even if there are errors
 			$valid=$model->validate() && $valid;
-		return $valid;
-	
+
+        return $valid;
 	}
 	
 	/**
-	 * saves the tags on db and delete not needed tags
-	 * @param photograph the photograph on wich tags belongs to
+	 * Saves the items in the database, and deletes those items which are no longer needed.
+	 * @param $model CActiveRecord the parent object
 	 */
 	public function save($model)
 	{
-		
 		$itemOk=array();
-		foreach ($this->_items as $i=>$item)
+
+        // Delete the old items
+		if (!$model->isNewRecord)
+			$this->deleteOldItems($model, $itemOk);
+
+        // Add the new items
+        foreach ($this->_items as $i=>$item)
 		{
+            /** @var $item CActiveRecord */
 			$this->setUnsafeAttribute($item, $model);
 			$item->save();
 			$itemOk[]=$item->primaryKey;
 		}
-		if (!$model->isNewRecord)
-			$this->deleteOldItems($model, $itemOk);
 	}
 	
 	/**
-	 * set the unsafe attributes in the items, usually the primary key of the model
-	 * @param model the item to save
-	 * @param model the model on wich the items belongs to
+	 * Set the unsafe attributes for the child items, usually the primary key of the parent model
+	 * @param $item CActiveRecord - the child item
+	 * @param $model CActiveRecord - the parent model
 	 */
 	public abstract function setUnsafeAttribute($item, $model);
 	
 	/**
-	 * Delete the items that the user deleted
-	 * @param model the model on wich the items belongs to
-	 * @param array the primary keys to preserve
+	 * Deletes the old child items
+	 * @param $model CActiveRecord - the parent model
+	 * @param $itemsPk array - an array of the primary keys of the child models which we want to keep
 	 */
 	public abstract function deleteOldItems($model, $itemsPk);
 	
 	
 	/**
-	 * Create a tagManager and load the existent tags
-	 * @param photograph the photograph on wich tags belongs to
-	 * @return tagManager the newly created tagManager
+	 * Create a new TabularInputManager and loads the current child items
+	 * @param $model CActiveRecord - the parent model
+	 * @return TabularInputManager the newly created TabularInputManager object
 	 */
 	public abstract function load($model);
-	
-
-
 }

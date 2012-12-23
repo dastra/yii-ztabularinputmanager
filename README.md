@@ -3,18 +3,51 @@ yii-ztabularinputmanager
 
 This is a Yii parent class for a Tabular input manager
 
-It has been tought to be used in scenarios where you have a one-to-many relationship.
+It has been built to be used in scenarios where you have a one-to-many relationship.
 
 The interface should present an interface for collect the data of the one, and zero, one or many rows for collect the many.
 
-In the hipotesys that we have to insert a ClassRoom with many Students, we will create a StudentManager by extending Tabular input manager
+Installation
+------------
+
+Download TabularInputManager.php and save it in your protected/extensions/ directory.
+
+You can then either import the extenstion so that it is loaded globally by adding it to protected\config\main.php
+
+```
+'import' => array(
+    'application.models.*',
+    'application.components.*',
+    'application.extensions.TabularInputManager',
+),
+```
+
+Or you can simply include it where needed:
+```
+<?php
+
+Yii::import('application.extensions.TabularInputManager');
+class StudentManager extends TabularInputManager
+...
+```
+
+Usage
+-----
+
+
+In this example, we are inserting a ClassRoom with many Students.
+
+To manage the Students, we will create a StudentManager in the protected/components/ directory by extending TabularInputManager:
 
 ```
 class StudentManager extends TabularInputManager
 {
-
     protected $class='Student';
 
+	/**
+	 * Retrieve the list of Students
+	 * @return array of Student objects
+	 */
     public function getItems()
     {
         if (is_array($this->_items))
@@ -25,16 +58,26 @@ class StudentManager extends TabularInputManager
             );
     }
 
+	/**
+	 * Deletes the uneeded Students
+	 * @param $model ClassRoom - the parent model
+	 * @param $itemsPk array - an array of the primary keys of the child models which we want to keep
+	 */
     public function deleteOldItems($model, $itemsPk)
     {
         $criteria=new CDbCriteria;
         $criteria->addNotInCondition('id', $itemsPk);
-        $criteria->addCondition("class_id= {$model->primaryKey}");
+        $criteria->addCondition("classroom_id= {$model->primaryKey}");
 
         Student::model()->deleteAll($criteria);
     }
 
 
+	/**
+	 * Create a new TabularInputManager and loads the current child items
+	 * @param $model ClassRoom - the parent model
+	 * @return TabularInputManager the newly created TabularInputManager object
+	 */
     public static function load($model)
     {
         $return= new StudentManager;
@@ -43,17 +86,21 @@ class StudentManager extends TabularInputManager
         return $return;
     }
 
-
+	/**
+	 * Set the unsafe attributes for the child items, usually the primary key of the parent model
+	 * @param $item Student - the child item
+	 * @param $model ClassRoom - the parent model
+	 */
     public function setUnsafeAttribute($item, $model)
     {
-        $item->class_id=$model->primaryKey;
+        $item->classroom_id = $model->primaryKey;
     }
 }
 ```
 
-In this class we implement all methods needed for manage the primary keys of the students, for load the student of a class, for delete students.
+In this class we implement the methods needed to manage the primary keys of the students, to load all students in a ClassRoom, and to delete the students.
 
-The typical controller code for use this manager is:
+In this example, the controller code would look like this:
 
 ```
 /**
@@ -62,8 +109,8 @@ The typical controller code for use this manager is:
  */
 public function actionCreate()
 {
-    $model=new ClassRoom;
-    $studentManager=new studentManager();
+    $model=new ClassRoom();
+    $studentManager=new StudentManager();
 
     // Uncomment the following line if AJAX validation is needed
     // $this->performAjaxValidation($model);
@@ -168,5 +215,4 @@ And the _formStudent:
 </tr>
 ```
 
-The result will be a table of students, with the button for add and delete students
-
+The result will be a table of students with buttons to add and delete students.
