@@ -37,17 +37,30 @@ abstract class TabularInputManager extends CComponent
 				if (($data['command']=="delete")&&($data["id"]==$i))
 					continue;
 			
-			// if the code is like 'nxxx' is a new record
-			if (substr($i, 0, 1)=='n')
-			{ 
-				// create of new record
-				$item=new $classname();
-				// rember of the last one code
-				$this->_lastNew=substr($i, 1);
-			} 
-			else // load from db
-				$item=CActiveRecord::model($this->class)->findByPk($i);
-		
+            // if the code is like 'nxxx' is a new record
+            if (substr($i, 0, 1)=='n')
+            {
+                // create of new record
+                $item=new $classname();
+                // rember of the last one code
+                $this->_lastNew=substr($i, 1);
+            }
+            else // load from db
+            {
+                $pk = $i;
+                $model = CActiveRecord::model($this->class);
+                if (is_array($model->primaryKey))
+                {
+                    $pk = array();
+                    foreach(array_keys($model->primaryKey) as $key)
+                    {
+                        $pk[$key] = $item_post[$key];
+                    }
+                }
+
+                $item=$model->findByPk($pk);
+            }
+
 			$this->_items[$i]=$item;
 			if(isset($data[$i]))
 				$item->attributes=$data[$i];
@@ -80,11 +93,10 @@ abstract class TabularInputManager extends CComponent
 
 	/**
 	 * Validates items
-	 * @return boolean weather the validation is successfully
+	 * @return boolean whether the validation is successfully
 	 */
 	public function validate()
 	{
-
 		$valid=true;
 		foreach ($this->_items as $i=>$model)
 		 //we want to validate all tags, even if there are errors
@@ -131,7 +143,7 @@ abstract class TabularInputManager extends CComponent
 	 * @param photograph the photograph on wich tags belongs to
 	 * @return tagManager the newly created tagManager
 	 */
-	public abstract static function load($model);
+	public abstract function load($model);
 	
 
 
