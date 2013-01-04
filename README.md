@@ -81,7 +81,7 @@ class StudentManager extends TabularInputManager
 	 * @param $model ClassRoom - the parent model
 	 * @return TabularInputManager the newly created TabularInputManager object
 	 */
-    public static function load($model) {
+    public function load($model) {
         $return = new StudentManager;
         foreach($model->students as $item)
             $return->_items[$item->primaryKey]=$item;
